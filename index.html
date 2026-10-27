@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peer Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow column, a sheet of numbered criteria, sticky submit bar at the bottom */
+:root {
+  --bg: #eef1f4;
+  --sheet: #ffffff;
+  --ink: #17212c;
+  --muted: #5d6874;
+  --line: #d5dbe2;
+  --accent: #0e6b66;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefed;
+  --error: #b3261e;
+  --display: "Newsreader", Georgia, "Times New Roman", serif;
+  --body: "Instrument Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f151b; --sheet: #172028; --ink: #e6ebf0; --muted: #9aa6b2; --line: #2b3742;
+    --accent: #4fb8ae; --accent-ink: #0b1a19; --accent-soft: #173533; --error: #f2847b;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.5 var(--body);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.wrap {
+  max-width: 640px; margin: 0 auto;
+  padding-block: 28px 120px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px;
+}
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font: 600 32px/1.15 var(--display); margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); }
+.sheet { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; }
+.block { padding: 20px; display: grid; gap: 12px; border-top: 1px solid var(--line); }
+.block:first-child { border-top: 0; }
+.label { font-weight: 600; display: flex; gap: 10px; align-items: baseline; }
+.num { font: 600 15px var(--display); color: var(--accent); min-width: 1.2em; }
+.hint { font-size: 14px; color: var(--muted); margin: 0; }
+select, input[type=text], textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea { min-height: 96px; resize: vertical; }
+select:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+}
+.chip[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip.done:not([aria-pressed=true]) { color: var(--muted); }
+.chip.done::after { content: " \2713"; }
+.scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.scale button {
+  font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: 8px; padding: 10px 4px; display: grid; gap: 2px; justify-items: center;
+}
+.scale b { font: 600 20px var(--display); }
+.scale span { font-size: 11.5px; line-height: 1.2; color: var(--muted); text-align: center; }
+.scale button[aria-pressed=true] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.scale button[aria-pressed=true] span { color: var(--accent-ink); }
+.invalid { box-shadow: 0 0 0 2px var(--error); border-radius: 10px; }
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; background: var(--sheet); border-top: 1px solid var(--line);
+  padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar-in { max-width: 640px; margin: 0 auto; display: flex; gap: 12px; align-items: center; }
+.status { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); }
+.status.err { color: var(--error); }
+.submit {
+  font: 600 16px var(--body); border: 0; border-radius: 8px; padding: 12px 22px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+}
+.submit:disabled { opacity: .6; cursor: progress; }
+.thanks { padding: 28px 20px; display: grid; gap: 12px; justify-items: start; }
+.thanks h2 { font: 600 24px var(--display); margin: 0; }
+.thanks p { margin: 0; color: var(--muted); }
+.ghost {
+  font: 600 15px var(--body); border: 1px solid var(--accent); color: var(--accent); background: transparent;
+  border-radius: 8px; padding: 10px 18px; cursor: pointer;
+}
+.change { font: inherit; font-size: 14px; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+@media (max-width: 420px) { .scale span { font-size: 10.5px; } h1 { font-size: 28px; } }
+@media (prefers-reduced-motion: no-preference) { .chip, .scale button { transition: background .12s, color .12s; } }
+</style>
+</head>
+<body>
+<script>
+/* ------------------------------------------------------------------
+   SETTINGS: update these each year
+   ROSTER: names of the students who present (also used as the list
+   of evaluators). Leave empty to let students type names instead.
+------------------------------------------------------------------- */
+const COURSE = "Individual Presentation";
+const ROSTER = [
+  "Adhisa", "Akshat", "Aldo", "Alessandro", "Andrea", "Arianna", "Davide",
+  "Filippo", "Francesco", "Gaia", "Hedi", "Leonardo", "Lorenzo", "Matilda",
+  "Nicolas", "Pablo", "Sicong", "Varshini", "Victor D.", "Viktor K.", "Vittorio"
+];
+
+/* Form 1 receives the anonymous evaluations (last year's form,
+   with the "Evaluator" question deleted) */
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfGVCZ35qrfFNyTtpkjm8781EjSxs-kNCWhER3-oa9fGkL2ig/formResponse";
+const ENTRY = {
+  presenter: "entry.480234055",
+  q1: "entry.1034485533",
+  q2: "entry.113211608",
+  strength: "entry.846681749",
+  improve: "entry.608716357"
+};
+
+/* Form 2 only records who evaluated whom (no answers), so you can
+   check completion. Two short-answer questions: Evaluator, Evaluated student */
+const COMPLETION_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdgwv9iFVrGFX4XohXViepox9xgAT_ZCGBmsxihXOleIhvYPw/formResponse";
+const COMPLETION_ENTRY = {
+  evaluator: "entry.507644807",
+  presenter: "entry.373706182"
+};
+const SCALE = ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"];
+</script>
+
+<main class="wrap">
+  <header>
+    <div class="eyebrow" id="course"></div>
+    <h1>Peer evaluation</h1>
+    <p class="lede">Rate your classmate's presentation of the paper. Your evaluation is anonymous. Your name is only used to check that you completed all evaluations, and it is stored separately from your answers.</p>
+  </header>
+
+  <section class="sheet" id="formSheet">
+    <div class="block" id="evaluatorBlock">
+      <div class="label">Your name</div>
+      <div id="evaluatorInput"></div>
+      <div id="evaluatorSet" hidden>
+        <span id="evaluatorName" style="font-weight:600"></span>
+        &nbsp;<button class="change" id="changeEvaluator" type="button">Change</button>
+      </div>
+    </div>
+
+    <div class="block" id="presenterBlock">
+      <div class="label">Who presented?</div>
+      <div id="presenterInput"></div>
+    </div>
+
+    <div class="block" id="q1Block">
+      <div class="label"><span class="num">1</span><span>The student demonstrated a clear understanding of the paper and reflected deeply on its content.</span></div>
+      <div class="scale" data-q="q1"></div>
+    </div>
+
+    <div class="block" id="q2Block">
+      <div class="label"><span class="num">2</span><span>The student answered questions and addressed comments from the audience with confidence and clarity.</span></div>
+      <div class="scale" data-q="q2"></div>
+    </div>
+
+    <div class="block" id="strengthBlock">
+      <label class="label" for="strength"><span class="num">3</span><span>What did you find to be the strongest aspect of the presentation?</span></label>
+      <textarea id="strength" maxlength="1500"></textarea>
+    </div>
+
+    <div class="block" id="improveBlock">
+      <label class="label" for="improve"><span class="num">4</span><span>What could the presenter improve for future presentations?</span></label>
+      <textarea id="improve" maxlength="1500"></textarea>
+    </div>
+  </section>
+
+  <section class="sheet thanks" id="thanks" hidden>
+    <h2>Thank you</h2>
+    <p id="thanksText"></p>
+    <button class="ghost" id="another" type="button">Evaluate another presentation</button>
+  </section>
+</main>
+
+<div class="bar" id="bar">
+  <div class="bar-in">
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <button class="submit" id="submit" type="button">Submit</button>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { evaluator: "", presenter: "", q1: "", q2: "" };
+
+function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+function load(key) { try { return localStorage.getItem(key) || ""; } catch (e) { return ""; } }
+function doneList() { try { return JSON.parse(load("pe_done") || "[]"); } catch (e) { return []; } }
+
+$("course").textContent = COURSE;
+
+/* --- evaluator ---------------------------------------------------- */
+function renderEvaluator() {
+  const box = $("evaluatorInput");
+  box.innerHTML = "";
+  if (state.evaluator) {
+    box.hidden = true;
+    $("evaluatorSet").hidden = false;
+    $("evaluatorName").textContent = state.evaluator;
+    return;
+  }
+  box.hidden = false;
+  $("evaluatorSet").hidden = true;
+  if (ROSTER.length) {
+    const sel = document.createElement("select");
+    sel.id = "evaluatorSelect";
+    sel.innerHTML = '<option value="">Select your name</option>';
+    ROSTER.forEach((n) => sel.add(new Option(n, n)));
+    sel.addEventListener("change", () => { setEvaluator(sel.value); });
+    box.append(sel);
+  } else {
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.id = "evaluatorText"; inp.placeholder = "First and last name"; inp.autocomplete = "name";
+    inp.addEventListener("change", () => setEvaluator(inp.value.trim()));
+    box.append(inp);
+  }
+}
+function setEvaluator(name) {
+  state.evaluator = name;
+  store("pe_evaluator", name);
+  renderEvaluator();
+  renderPresenters();
+}
+$("changeEvaluator").addEventListener("click", () => { state.evaluator = ""; store("pe_evaluator", ""); renderEvaluator(); renderPresenters(); });
+
+/* --- presenter ---------------------------------------------------- */
+function renderPresenters() {
+  const box = $("presenterInput");
+  box.innerHTML = "";
+  if (ROSTER.length) {
+    const done = doneList();
+    const sel = document.createElement("select");
+    sel.id = "presenterSelect";
+    sel.innerHTML = '<option value="">Select the presenter</option>';
+    ROSTER.filter((n) => n !== state.evaluator).forEach((n) => {
+      const opt = new Option(n + (done.includes(n) ? "  ✓" : ""), n);
+      sel.add(opt);
+    });
+    sel.value = state.presenter;
+    sel.addEventListener("change", () => { state.presenter = sel.value; clearInvalid("presenterBlock"); });
+    box.append(sel);
+    if (done.length) {
+      const p = document.createElement("p");
+      p.className = "hint"; p.textContent = "✓ = already evaluated from this device.";
+      box.append(p);
+    }
+  } else {
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.id = "presenterText"; inp.placeholder = "Presenter's name"; inp.value = state.presenter;
+    inp.addEventListener("input", () => { state.presenter = inp.value.trim(); clearInvalid("presenterBlock"); });
+    box.append(inp);
+  }
+}
+
+/* --- rating scales ------------------------------------------------ */
+document.querySelectorAll(".scale").forEach((box) => {
+  const q = box.dataset.q;
+  SCALE.forEach((label, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = "<b>" + (i + 1) + "</b><span>" + label + "</span>";
+    b.setAttribute("aria-label", (i + 1) + " – " + label);
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      state[q] = label;
+      box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      clearInvalid(q + "Block");
+    });
+    box.append(b);
+  });
+});
+
+/* --- validation and submit ---------------------------------------- */
+function clearInvalid(id) { $(id).classList.remove("invalid"); }
+function setStatus(text, isError) { $("status").textContent = text; $("status").classList.toggle("err", !!isError); }
+
+function missingFields() {
+  const missing = [];
+  if (!state.evaluator) missing.push("evaluatorBlock");
+  if (!state.presenter) missing.push("presenterBlock");
+  if (!state.q1) missing.push("q1Block");
+  if (!state.q2) missing.push("q2Block");
+  if (!$("strength").value.trim()) missing.push("strengthBlock");
+  if (!$("improve").value.trim()) missing.push("improveBlock");
+  return missing;
+}
+["strength", "improve"].forEach((id) => $(id).addEventListener("input", () => clearInvalid(id + "Block")));
+
+$("submit").addEventListener("click", async () => {
+  const missing = missingFields();
+  document.querySelectorAll(".block").forEach((b) => b.classList.remove("invalid"));
+  if (missing.length) {
+    missing.forEach((id) => $(id).classList.add("invalid"));
+    $(missing[0]).scrollIntoView({ behavior: "smooth", block: "center" });
+    setStatus("Please answer the highlighted questions.", true);
+    return;
+  }
+  if (state.presenter === state.evaluator) { setStatus("You can't evaluate your own presentation.", true); return; }
+
+  const body = new URLSearchParams();
+  body.append(ENTRY.presenter, state.presenter);
+  body.append(ENTRY.q1, state.q1);
+  body.append(ENTRY.q2, state.q2);
+  body.append(ENTRY.strength, $("strength").value.trim());
+  body.append(ENTRY.improve, $("improve").value.trim());
+
+  $("submit").disabled = true;
+  setStatus("Sending…");
+  try {
+    // Google Forms does not allow reading the response from another site,
+    // so a completed request is the only confirmation available here.
+    await fetch(FORM_URL, { method: "POST", mode: "no-cors", body });
+    if (COMPLETION_FORM_URL) {
+      const log = new URLSearchParams();
+      log.append(COMPLETION_ENTRY.evaluator, state.evaluator);
+      log.append(COMPLETION_ENTRY.presenter, state.presenter);
+      await fetch(COMPLETION_FORM_URL, { method: "POST", mode: "no-cors", body: log });
+    }
+    const done = doneList();
+    if (!done.includes(state.presenter)) done.push(state.presenter);
+    store("pe_done", JSON.stringify(done));
+    $("thanksText").textContent = "Your evaluation of " + state.presenter + " was sent.";
+    $("formSheet").hidden = true; $("bar").hidden = true; $("thanks").hidden = false;
+    setStatus("");
+    window.scrollTo(0, 0);
+  } catch (e) {
+    setStatus("Not sent: no connection to Google Forms. Check your internet connection and tap Submit again.", true);
+  } finally {
+    $("submit").disabled = false;
+  }
+});
+
+$("another").addEventListener("click", () => {
+  state.presenter = ""; state.q1 = ""; state.q2 = "";
+  $("strength").value = ""; $("improve").value = "";
+  document.querySelectorAll(".scale button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+  $("thanks").hidden = true; $("formSheet").hidden = false; $("bar").hidden = false;
+  renderPresenters();
+  window.scrollTo(0, 0);
+});
+
+/* --- start: remembered evaluator, presenter from link (?presenter=Name) --- */
+state.evaluator = load("pe_evaluator");
+if (ROSTER.length && state.evaluator && !ROSTER.includes(state.evaluator)) state.evaluator = "";
+const fromLink = new URLSearchParams(location.search).get("presenter");
+if (fromLink && (!ROSTER.length || ROSTER.includes(fromLink))) state.presenter = fromLink;
+renderEvaluator();
+renderPresenters();
+</script>
+</body>
+</html>
